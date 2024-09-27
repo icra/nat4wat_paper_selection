@@ -20,7 +20,7 @@ swm_water <- c(
 
 treatment_inputs <- list(
   inhabitants = 2^c(2:12),
-  climates = c("Tropical", "Temperate", "Continental"),
+  climates = c("tropical", "temperate", "continental"),
   bod_removal = c(TRUE, FALSE),
   cod_removal = c(TRUE, FALSE),
   nh4_removal = c(TRUE, FALSE),
@@ -57,18 +57,20 @@ swm_inputs <- list(
 # Generic params ----------------------------------------------------------------------------------------
 
 generic_inputs <- list(
-  household = c(TRUE, FALSE),
-  energy = c("yes", "no")
+  household = c(TRUE, FALSE)
 )
 
 
 # MCDA params -------------------------------------------------------------------------------------------
 
 mcda_inputs <- list(
-  w_multifunctionality = 0:5,
-  w_operation = 0:5,
-  w_spaceRequirements = 0:5,
-  w_envImpact = 0:5,
-  w_cost = 0:5
+  wBiodiversity = 0:5,
+  wOperation = 0:5,
+  wSpaceRequirements = 0:5,
+  wEnvImpact = 0:5,
+  wCapex = 0:5,
+  wSocialBenefits = 0:5,
+  wCircularity = 0:5,
+  wRemovalPerformance = 0:5
 )
 
