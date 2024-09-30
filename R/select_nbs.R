@@ -1,10 +1,9 @@
-find_nbs <- function(body){
+find_nbs <- function(body, as_data_frame = FALSE){
   request(paste(api_url, "technologies", "find-nbs", sep = "/")) |> 
     req_headers("Accept" = "application/json") |> 
     req_body_json(body) |> 
     req_perform() |> 
-    resp_body_json()
-
+    resp_body_json(simplifyDataFrame = as_data_frame)
 }
 
 mcda <- function(body){
@@ -21,19 +20,33 @@ select_nbs_treatment <- function(inputs_treatment){
     list_rbind()
 }
 
-select_nbs_treatment_one <- function(x){
-  pollutants <- names(x)[str_detect(names(x), "_re")]
-  pollutants <- pollutants[x[1, ..pollutants] |> as_vector()]
-
+create_body_treatment <- function(x){
 
   body <- list(
     waterType = x$water_type,
     inhabitants = x$inhabitants,
     climate = x$climates,
-    pollutants = pollutants,
     minPerformance = x$min_performances,
     household = x$household
   )
+  
+  pollutants <- names(x)[str_detect(names(x), "_re")]
+  pollutants <- pollutants[x[1, ..pollutants] |> as_vector()]
+
+  if (length(pollutants) > 0){
+    if (length(pollutants) == 1) body$pollutants <- list(pollutants)
+    else body$pollutants <- pollutants
+  }
+
+  if (body$waterType == "greywater"){
+    body$ecosystemServices = list(es_water_reuse = 2)
+  }
+
+  body
+}
+
+select_nbs_treatment_one <- function(x){
+  body <- create_body_treatment(x)
 
   find_nbs(body) |> 
     apply_mcda(x)
@@ -62,6 +75,8 @@ select_nbs_swm_one <- function(x){
 
 apply_mcda <- function(selection, x){
   if (!is.null(selection$error)){
+    write(selection$error, "log.txt", append = TRUE)
+
     return(
       tidytable(id = NA, total_score = NA) |> 
         bind_cols(x)
@@ -79,4 +94,10 @@ apply_mcda <- function(selection, x){
     pivot_wider() |> 
     slice_max(total_score) |> 
     bind_cols(x)
+}
+
+get_techs <- function(api_url){
+  request(paste(api_url, "technologies", "technologies", sep = "/")) |> 
+  req_perform() |> 
+  resp_body_json(simplifyDataFrame = T)
 }

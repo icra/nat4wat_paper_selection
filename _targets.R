@@ -19,7 +19,9 @@ list(
   tar_target(inputs_treatment, fix_household(inputs_treatment_raw)),
   tar_target(inputs_swm, generate_inputs(swm_water, n)),
   tar_target(selection_treatment, select_nbs_treatment(inputs_treatment)),
-  tar_target(selection_swm, select_nbs_swm(inputs_swm))
+  tar_target(selection_swm, select_nbs_swm(inputs_swm)),
+  tar_target(techs, get_techs(api_url))
+  # tar_target(no_solution, explore_no_solutions(selection_treatment))
 
 )
 

@@ -28,3 +28,13 @@ fix_household <- function(inputs){
   inputs |>
     mutate(inhabitants = if_else(household, sample(household_inh, n(), replace = TRUE), inhabitants))
 }
+
+constraint_greywater <- function(inputs){
+  inputs |> 
+    dplyr::as_tibble() |> 
+    dplyr::mutate(ecosystem_services = if_else(
+      water_type == "greywater",
+      dplyr::lst(es_water_reuse = 2),
+      dplyr::lst(es_water_reuse = 0)
+    ))
+}
