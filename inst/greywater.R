@@ -1,6 +1,8 @@
 tar_load_globals()
 tar_load(selection_treatment)
 tar_load(techs)
+gw_no <- tar_read(no_solution) |> 
+  filter(water_type == "greywater")
 
 glimpse(selection_treatment)
 
@@ -22,3 +24,8 @@ df |>
 
 gw_techs <- techs |> 
   filter(id %in% df$id)
+
+gw_no |> 
+  count(idx)
+
+

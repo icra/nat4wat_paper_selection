@@ -92,6 +92,7 @@ apply_mcda <- function(selection, x){
     pivot_longer(-id) |> 
     mutate(total_score = sum(value), .by = id) |> 
     pivot_wider() |> 
+    mutate(n_solutions = n()) |> 
     slice_max(total_score) |> 
     bind_cols(x)
 }
