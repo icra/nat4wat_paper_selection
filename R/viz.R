@@ -133,5 +133,32 @@ plot_mcda_relevance <- function(selection_treatment, techs, file){
       y = "Top 3 solutions for each wastewater type"
     ) +
     theme_custom()
-  ggsave(file, p, width = 10, height = 6)
+  ggsave(file, p, width = 8, height = 4)
+}
+
+plot_number_solutions <- function(selection_treatment, file){
+  mod <- model_number_solutions(selection_treatment)  
+
+  p <- broom::tidy(mod) |> 
+    filter(term != "(Intercept)") |> 
+    mutate(term = replace_criteria(term)) |> 
+    mutate(color = case_when(
+      p.value > 0.1 ~ "grey80",
+      estimate > 0 & p.value < 0.1 ~ palette["green"],
+      estimate < 0 & p.value < 0.1 ~ palette["brown"],
+      .default = "red"
+    )) |> 
+    ggplot(aes(y = reorder(term, estimate), color = color)) +
+    geom_segment(aes(x = 0, xend = estimate), linewidth = 1) +
+    geom_point(aes(x = estimate), size = 4) +
+    scale_color_identity() +
+    annotate("text", x = 0.25, y = 1, size = 3.5,
+            label = paste0("Intercept = ", round(mod$coefficients[[1]], 2)),
+            ) +
+    labs(
+      x = "Estimate of Poisson model",
+      y = "Criteria for selection of suitable solutions"
+    ) +
+    theme_custom() 
+  ggsave(file, p, width = 8, height = 4)
 }
