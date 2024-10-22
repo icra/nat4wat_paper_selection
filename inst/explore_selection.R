@@ -151,3 +151,130 @@ broom::tidy(mod) |>
   ) +
   theme_custom()
 
+# Correlation n_solutions ~ freq_selected --------------------------------------
+
+df <- tar_read(selection_treatment) |> 
+    summarize(n = n(), n_solutions = mean(n_solutions), .by = c(id, water_type)) |> 
+    mutate(water_type = replace_water_type(water_type))
+
+df |> 
+  ggplot(aes(x = n, y = n_solutions)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  scale_x_log10()
+
+cor.test(df$n, df$n_solutions, method = "spearman")
+
+tar_read(techs) |> 
+  as_tidytable() |> 
+  filter(
+    p_removal == 1,
+    raw_domestic_wastewater == 1
+  )
+
+scores <- tar_read(selection_treatment) |> 
+  filter(!is.na(id)) |> 
+  summarize(
+    n_chosen = n(), 
+    n_solutions = mean(n_solutions), 
+    .by = c(id, water_type)
+  ) |> 
+  mutate(
+    # n_chosen_std = scale(n_chosen, center = FALSE), # / max(n_chosen),
+    n_chosen_std = n_chosen / max(n_chosen),
+    # n_solutions_std = scale(n_solutions, center = FALSE), # / max(n_solutions), 
+    n_solutions_std = n_solutions / max(n_solutions), 
+    .by = water_type
+  ) |> 
+  mutate(score_water = (n_chosen_std + n_solutions_std) / 2)
+
+scores |>  
+  summarize(score = sum(score_water) / 4, .by = id) |> 
+  arrange(desc(score)) |> 
+  left_join(tar_read(techs) |> select(id, name), by = "id") |> 
+  as_tidytable() |> 
+  ggplot(aes(x = score, y = reorder(name, score))) +
+  geom_col(fill = palette["green"]) +
+  scale_x_continuous(expand = c(0,0)) +
+  labs(x = "Scores") +
+  theme_custom() +
+  theme(
+    axis.title.y = element_blank()
+  )
+
+
+scores |>  
+  summarize(
+    score_chosen = sum(n_chosen_std), 
+    score_solutions = sum(n_solutions_std),
+    score = score_chosen + score_solutions,
+    .by = c(id, water_type)) |> 
+  arrange(desc(score)) |> 
+  left_join(tar_read(techs) |> select(id, name), by = "id") |> 
+  # as_tidytable() |> print(n = 24)
+  pivot_longer(c(score_chosen, score_solutions), names_to = "score_type") |> 
+  ggplot(aes(x = value, y = reorder(name, score), fill = score_type)) +
+  geom_col() +
+  scale_x_continuous(expand = expansion(add = c(0, 0.15))) +
+  scale_fill_manual(
+    values = unname(palette[c("green", "brown")]),
+    labels = c("Times chosen", "Competitors"),
+    name = "Score type"
+  ) +
+  scale_y_discrete(labels = \(x) str_trunc(x, 40)) +
+  labs(x = "Total score") +
+  theme_custom() +
+  theme(
+    axis.title.y = element_blank()
+  ) +
+  facet_wrap(~water_type, scales = "free")
+
+scores |>  
+  summarize(score = sum(score_water) / 4, .by = id) |> 
+  arrange(desc(score)) |> 
+  left_join(tar_read(techs) |> select(id, name), by = "id") |> 
+  as_tidytable() |> 
+  ggplot(aes(x = score, y = reorder(name, score))) +
+  geom_col(fill = palette["green"]) +
+  scale_x_continuous(expand = c(0,0)) +
+  labs(x = "Scores") +
+  theme_custom() +
+  theme(
+    axis.title.y = element_blank()
+  )
+
+plot_scores <- function(scores, scores_by){
+  plot <- scores |>  
+    mutate(water_type = replace_water_type(water_type)) |> 
+    summarize(
+      score_chosen = sum(n_chosen_std), 
+      score_solutions = sum(n_solutions_std),
+      score = score_chosen + score_solutions,
+      .by = all_of(scores_by)) |> 
+    arrange(desc(score)) |> 
+    left_join(tar_read(techs) |> select(id, name), by = "id") |> 
+    pivot_longer(c(score_chosen, score_solutions), names_to = "score_type") |> 
+    ggplot(aes(x = value, y = reorder(name, score), fill = score_type)) +
+    geom_col() +
+    scale_x_continuous(expand = expansion(add = c(0, 0.15))) +
+    scale_fill_manual(
+      values = unname(palette[c("green", "brown")]),
+      labels = c("Times chosen", "Competitors"),
+      name = "Score type"
+    ) +
+    scale_y_discrete(labels = \(x) str_trunc(x, 40)) +
+    labs(x = "Total score") +
+    theme_custom() +
+    theme(
+      axis.title.y = element_blank()
+    )
+  if ("water_type" %in% scores_by){
+    plot <- plot + 
+      facet_wrap(~water_type, scales = "free_y")
+  }
+  plot
+}
+
+plot_scores(scores, c("id")) / plot_scores(scores, c("id", "water_type")) +
+  plot_layout(guides = "collect")
+ggsave("inst/score_plot.png", width = 8, height = 8)

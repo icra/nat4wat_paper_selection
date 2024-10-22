@@ -57,10 +57,22 @@ replace_criteria <- function(criteria){
 }
 
 plot_selection <- function(selection, techs, file){
-  p <- selection |> 
+
+  water_types <- sort(unique(selection$water_type))
+
+  map(water_types, \(wt) plot_selection_water_type(wt, selection, techs)) |> 
+    wrap_plots(ncol = 1)
+
+
+  ggsave(file, p, width = 10, height = 6)
+}
+
+plot_selection_water_type <- function(wt, selection, techs){
+  selection |> 
+    filter(water_type == wt) |> 
     summarize(n = n(), n_solutions = mean(n_solutions), .by = c(id, water_type)) |> 
     mutate(water_type = replace_water_type(water_type)) |> 
-    left_join(techs |> select(id, name), .by = "id") |> 
+    left_join(techs |> select(id, name), by = "id") |> 
     mutate(name = str_trunc(name, 40)) |> 
     ggplot(aes(x = n, y = name, fill = n_solutions)) +
     geom_col() + #(fill = palette["blue2"]) +
@@ -70,6 +82,30 @@ plot_selection <- function(selection, techs, file){
       direction = 1, 
       na.value = "grey80" #palette["brown"]
     ) +
+    scale_x_break(c(1100, 3500)) +
+    theme_custom() +
+    theme(
+      axis.text.y = element_text(hjust = 1, vjust = 0.5),
+      axis.title = element_blank(),
+      legend.position = "bottom"
+    )
+}
+
+plot_selection_log2 <- function(selection, techs, file){
+  p <- selection |> 
+    summarize(n = n(), n_solutions = mean(n_solutions), .by = c(id, water_type)) |> 
+    mutate(water_type = replace_water_type(water_type)) |> 
+    left_join(techs |> select(id, name), by = "id") |> 
+    mutate(name = str_trunc(name, 40)) |> 
+    ggplot(aes(x = n, y = name, fill = n_solutions)) +
+    geom_col() + #(fill = palette["blue2"]) +
+    scale_fill_distiller(
+      name = "Suitable solutions", 
+      palette = "Greens",
+      direction = 1, 
+      na.value = "grey80" #palette["brown"]
+    ) +
+    scale_x_continuous(transform = "log2") +
     facet_wrap(vars(water_type), scales = "free") +
     theme_custom() +
     theme(
@@ -133,7 +169,7 @@ plot_mcda_relevance <- function(selection_treatment, techs, file){
       y = "Top 3 solutions for each wastewater type"
     ) +
     theme_custom()
-  ggsave(file, p, width = 8, height = 4)
+  ggsave(file, p, width = 9, height = 4)
 }
 
 plot_number_solutions <- function(selection_treatment, file){
@@ -161,4 +197,55 @@ plot_number_solutions <- function(selection_treatment, file){
     ) +
     theme_custom() 
   ggsave(file, p, width = 8, height = 4)
+}
+
+create_loosers_table <- function(loosers, file){
+  loosers |> 
+    select(Solution = name, type, greywater, pretreated_domestic_wastewater, raw_domestic_wastewater, secondary_treated_wastewater) |> 
+    rename_with(.fn = \(x) replace_water_type(x), .cols = ends_with("water")) |> 
+    arrange(type) |> 
+    mutate(type = case_match(
+      type,
+      "CW" ~ "Constructed wetlands",
+      "HA" ~ "Hydroponics and aquaponics",
+      "MS" ~ "Multi-stage solutions",
+      "PL" ~ "Ponds and lagoons",
+      .default = NA
+    )) |> 
+    mutate(across(ends_with("water"), \(x) case_match(x, 0 ~ "No", 1 ~ "Yes", 2 ~ "Not ideal"))) |> 
+    group_by(type) |> 
+    gt() |> 
+    gtsave("plots/loosers_table.docx")
+}
+
+plot_scores <- function(scores, scores_by, techs, file, size = c(10, 6)){
+  plot <- scores |>  
+    mutate(water_type = replace_water_type(water_type)) |> 
+    summarize(
+      score_chosen = sum(n_chosen_std), 
+      score_solutions = sum(n_solutions_std),
+      score = score_chosen + score_solutions,
+      .by = all_of(scores_by)) |> 
+    arrange(desc(score)) |> 
+    left_join(techs |> select(id, name), by = "id") |> 
+    pivot_longer(c(score_chosen, score_solutions), names_to = "score_type") |> 
+    ggplot(aes(x = value, y = reorder(name, score), fill = score_type)) +
+    geom_col() +
+    scale_x_continuous(expand = expansion(add = c(0, 0.15))) +
+    scale_fill_manual(
+      values = unname(palette[c("green", "brown")]),
+      labels = c("Times chosen", "Competitors"),
+      name = "Score type"
+    ) +
+    scale_y_discrete(labels = \(x) str_trunc(x, 40)) +
+    labs(x = "Total score") +
+    theme_custom() +
+    theme(
+      axis.title.y = element_blank()
+    )
+  if ("water_type" %in% scores_by){
+    plot <- plot + 
+      facet_wrap(~water_type, scales = "free_y")
+  }
+  ggsave(file, plot, width = size[1], height = size[2])
 }

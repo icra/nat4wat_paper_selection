@@ -37,3 +37,30 @@ model_number_solutions <- function(selection_treatment){
   glm(n_solutions ~ ., df_glm, family = "poisson")
 }
 
+find_loosers <- function(selection, techs){
+  modul <- if_else(str_detect(deparse(substitute(selection)), "treatment"), "treatment", "swm")
+
+  techs |> 
+    filter(module == modul) |> 
+    filter(!(id %in% selection$id)) |> 
+    filter(!str_detect(name, "CSO")) |> 
+    as_tidytable()
+}
+
+calc_scores <- function(selection){
+  selection |> 
+    filter(!is.na(id)) |> 
+    summarize(
+      n_chosen = n(), 
+      n_solutions = mean(n_solutions), 
+      .by = c(id, water_type)
+    ) |> 
+    mutate(
+      # n_chosen_std = scale(n_chosen, center = FALSE), # / max(n_chosen),
+      n_chosen_std = n_chosen / max(n_chosen),
+      # n_solutions_std = scale(n_solutions, center = FALSE), # / max(n_solutions), 
+      n_solutions_std = n_solutions / max(n_solutions), 
+      .by = water_type
+    ) |> 
+    mutate(score_water = (n_chosen_std + n_solutions_std) / 2)
+}
