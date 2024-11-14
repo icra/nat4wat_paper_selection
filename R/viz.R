@@ -226,9 +226,11 @@ plot_scores <- function(scores, scores_by, techs, file, size = c(10, 6)){
       score_solutions = sum(n_solutions_std),
       score = score_chosen + score_solutions,
       .by = all_of(scores_by)) |> 
-    arrange(desc(score)) |> 
     left_join(techs |> select(id, name), by = "id") |> 
     pivot_longer(c(score_chosen, score_solutions), names_to = "score_type") |> 
+    # arrange(water_type, desc(score)) |>
+    # mutate(position = row_number()) |> 
+    # mutate(position = if_else(position %% 2 == 0, position - 1, position)) |> 
     ggplot(aes(x = value, y = reorder(name, score), fill = score_type)) +
     geom_col() +
     scale_x_continuous(expand = expansion(add = c(0, 0.15))) +
@@ -248,4 +250,14 @@ plot_scores <- function(scores, scores_by, techs, file, size = c(10, 6)){
       facet_wrap(~water_type, scales = "free_y")
   }
   ggsave(file, plot, width = size[1], height = size[2])
+}
+
+move_files <- function(..., path = "C:/Users/jpueyo/ICRA/MULTISOURCE - General/Publications/nbs_selection/figures/"){
+  if (!dir.exists(path)) rlang::abort("path doesn't exist")
+  
+  files <- c(...)
+  for (f in files){
+    file.copy(f, path)
+  }
+  path
 }

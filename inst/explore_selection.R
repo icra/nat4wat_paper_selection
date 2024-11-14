@@ -188,93 +188,36 @@ scores <- tar_read(selection_treatment) |>
   ) |> 
   mutate(score_water = (n_chosen_std + n_solutions_std) / 2)
 
-scores |>  
+scores_glm <- scores |>
   summarize(score = sum(score_water) / 4, .by = id) |> 
-  arrange(desc(score)) |> 
-  left_join(tar_read(techs) |> select(id, name), by = "id") |> 
-  as_tidytable() |> 
-  ggplot(aes(x = score, y = reorder(name, score))) +
-  geom_col(fill = palette["green"]) +
-  scale_x_continuous(expand = c(0,0)) +
-  labs(x = "Scores") +
-  theme_custom() +
-  theme(
-    axis.title.y = element_blank()
-  )
+  left_join(techs) |> 
+  select(id, where(is.numeric)) |> 
+  select(!where(\(x) any(is.na(x)))) |> 
+  tibble::column_to_rownames("id")
+
+glimpse(scores_glm)
+
+y <- scores_glm$score
+x <- data.matrix(scores_glm[, 2:ncol(scores_glm)])
+
+library(glmnet)
+
+cv_model <- cv.glmnet(x, y, alpha = 1)
+
+best_lambda <- cv_model$lambda.min
+
+plot(cv_model)
+
+best_mod <- glmnet(x, y, alpha = 1, lambda = best_lambda)
+coef(best_mod)
+
+plot(best_mod)
+
+library(FactoMineR)
+library(factoextra)
+
+pca_res <- PCA(scores_glm, quanti.sup = "score")
+
+fviz_pca_var(pca_res)
 
 
-scores |>  
-  summarize(
-    score_chosen = sum(n_chosen_std), 
-    score_solutions = sum(n_solutions_std),
-    score = score_chosen + score_solutions,
-    .by = c(id, water_type)) |> 
-  arrange(desc(score)) |> 
-  left_join(tar_read(techs) |> select(id, name), by = "id") |> 
-  # as_tidytable() |> print(n = 24)
-  pivot_longer(c(score_chosen, score_solutions), names_to = "score_type") |> 
-  ggplot(aes(x = value, y = reorder(name, score), fill = score_type)) +
-  geom_col() +
-  scale_x_continuous(expand = expansion(add = c(0, 0.15))) +
-  scale_fill_manual(
-    values = unname(palette[c("green", "brown")]),
-    labels = c("Times chosen", "Competitors"),
-    name = "Score type"
-  ) +
-  scale_y_discrete(labels = \(x) str_trunc(x, 40)) +
-  labs(x = "Total score") +
-  theme_custom() +
-  theme(
-    axis.title.y = element_blank()
-  ) +
-  facet_wrap(~water_type, scales = "free")
-
-scores |>  
-  summarize(score = sum(score_water) / 4, .by = id) |> 
-  arrange(desc(score)) |> 
-  left_join(tar_read(techs) |> select(id, name), by = "id") |> 
-  as_tidytable() |> 
-  ggplot(aes(x = score, y = reorder(name, score))) +
-  geom_col(fill = palette["green"]) +
-  scale_x_continuous(expand = c(0,0)) +
-  labs(x = "Scores") +
-  theme_custom() +
-  theme(
-    axis.title.y = element_blank()
-  )
-
-plot_scores <- function(scores, scores_by){
-  plot <- scores |>  
-    mutate(water_type = replace_water_type(water_type)) |> 
-    summarize(
-      score_chosen = sum(n_chosen_std), 
-      score_solutions = sum(n_solutions_std),
-      score = score_chosen + score_solutions,
-      .by = all_of(scores_by)) |> 
-    arrange(desc(score)) |> 
-    left_join(tar_read(techs) |> select(id, name), by = "id") |> 
-    pivot_longer(c(score_chosen, score_solutions), names_to = "score_type") |> 
-    ggplot(aes(x = value, y = reorder(name, score), fill = score_type)) +
-    geom_col() +
-    scale_x_continuous(expand = expansion(add = c(0, 0.15))) +
-    scale_fill_manual(
-      values = unname(palette[c("green", "brown")]),
-      labels = c("Times chosen", "Competitors"),
-      name = "Score type"
-    ) +
-    scale_y_discrete(labels = \(x) str_trunc(x, 40)) +
-    labs(x = "Total score") +
-    theme_custom() +
-    theme(
-      axis.title.y = element_blank()
-    )
-  if ("water_type" %in% scores_by){
-    plot <- plot + 
-      facet_wrap(~water_type, scales = "free_y")
-  }
-  plot
-}
-
-plot_scores(scores, c("id")) / plot_scores(scores, c("id", "water_type")) +
-  plot_layout(guides = "collect")
-ggsave("inst/score_plot.png", width = 8, height = 8)
