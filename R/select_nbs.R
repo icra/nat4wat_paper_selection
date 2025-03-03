@@ -25,9 +25,7 @@ create_body_treatment <- function(x){
   body <- list(
     waterType = x$water_type,
     inhabitants = x$inhabitants,
-    climate = x$climates,
-    minPerformance = x$min_performances,
-    household = x$household
+    climate = x$climates
   )
   
   pollutants <- names(x)[str_detect(names(x), "_re")]

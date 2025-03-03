@@ -11,7 +11,7 @@ generate_inputs_sp <- function(wt, n){
     sp_inputs <- treatment_inputs
   }
 
-  inputs <- c(sp_inputs, generic_inputs, mcda_inputs)
+  inputs <- c(sp_inputs, mcda_inputs)
 
   inputs_tb <- inputs |>
     imap(\(x, y) tidytable(!!sym(y) := sample(x, n, replace = TRUE)))

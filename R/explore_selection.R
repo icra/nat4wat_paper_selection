@@ -43,7 +43,8 @@ find_loosers <- function(selection, techs){
   techs |> 
     filter(module == modul) |> 
     filter(!(id %in% selection$id)) |> 
-    filter(!str_detect(name, "CSO")) |> 
+    filter(!str_detect(name, "CSO")) |>
+    filter(if_any(raw_domestic_wastewater:secondary_treated_wastewater, \(.x) .x == 1)) |> 
     as_tidytable()
 }
 

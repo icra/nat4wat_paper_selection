@@ -27,8 +27,7 @@ treatment_inputs <- list(
   no3_removal = c(TRUE, FALSE),
   tn_removal = c(TRUE, FALSE),
   p_removal = c(TRUE, FALSE),
-  pathogens_reduction = c(TRUE, FALSE),
-  min_performances = seq(50, 95, 5)
+  pathogens_reduction = c(TRUE, FALSE)
 )
 
 

@@ -215,7 +215,7 @@ create_loosers_table <- function(loosers, file){
     mutate(across(ends_with("water"), \(x) case_match(x, 0 ~ "No", 1 ~ "Yes", 2 ~ "Not ideal"))) |> 
     group_by(type) |> 
     gt() |> 
-    gtsave("plots/loosers_table.docx")
+    gtsave(file)
 }
 
 plot_scores <- function(scores, scores_by, techs, file, size = c(10, 6)){
