@@ -10,7 +10,7 @@ tar_option_set(
     "httr2", "tidytable", "stringr", 
     "purrr", "ggplot2", "recipes", 
     "ggbreak", "patchwork", "gt",
-    "modelsummary"
+    "modelsummary", "modelbased"
   ) # Packages that your targets need for their tasks.
 )
 
@@ -35,6 +35,7 @@ list(
   tar_target(loosers_treatment, find_loosers(selection_treatment, techs)),
   tar_target(loosers_treatment_table, create_loosers_table(loosers_treatment, "plots/loosers_table.docx"), format = "file"),
   tar_target(number_solutions_plot, plot_number_solutions(selection_treatment, "plots/number_solutions_plot.png"), format = "file"),
+  tar_target(water_type_means, plot_means_water_type(selection_treatment, "plots/means_water_type.png")),
   tar_target(mcda_relevance_plot, plot_mcda_relevance(selection_treatment, techs, "plots/mcda_relevance_plot.png"), format = "file"),
   tar_target(scores_treatment, calc_scores(selection_treatment)),
   tar_target(scores_treatment_plot, plot_scores(scores_treatment, "id", techs, "plots/scores.png", c(8, 5)), format = "file"),
@@ -49,7 +50,8 @@ list(
       number_solutions_plot,
       mcda_relevance_plot,
       scores_treatment_plot,
-      scores_treatment_plot_wt
+      scores_treatment_plot_wt,
+      water_type_means
     ),
     force = TRUE
   )

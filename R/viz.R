@@ -263,3 +263,47 @@ move_files <- function(..., path = "C:/Users/jpueyo/ICRA/MULTISOURCE - General/P
   }
   path
 }
+
+plot_means_water_type <- function(selection_treatment, file){
+  df <- selection_treatment |> 
+    filter(!is.na(id))
+  
+  glm_rec <- recipes::recipe(id ~ ., data = df) |> 
+    recipes::step_dummy(all_nominal(), -all_outcomes()) |> 
+    recipes::step_mutate_at(all_logical(), fn = \(x) as.integer(x))
+  
+  df_glm <- recipes::prep(glm_rec) |>
+    recipes::juice() |> 
+    mutate(n_solutions = if_else(is.na(n_solutions), 0, n_solutions)) |> 
+    select(-id, -total_score, -matches("w[A-Z]", ignore.case = FALSE), -starts_with("weig"))
+  
+  df_glm <- df |> 
+  mutate(n_solutions = if_else(is.na(n_solutions), 0, n_solutions)) |> 
+  select(-id, -total_score, -matches("w[A-Z]", ignore.case = FALSE), -starts_with("weig"))
+
+  
+  poisson_mod <- glm(n_solutions ~ ., df_glm, family = "poisson")
+
+  means <- estimate_means(poisson_mod, by = "water_type")
+
+  plot <- ggplot(df_glm, aes(x = water_type, y = n_solutions)) +
+    # Add base data
+    geom_boxplot(fill = palette["brown"]) +
+    # geom_jitter(width = 0.1, height = 0, alpha = 0.5, size = 3) +
+    # Add pointrange and line for means
+    geom_line(data = means, aes(y = Mean, group = 1), linewidth = 1, color = palette["blue2"]) +
+    geom_pointrange(
+      data = means,
+      aes(y = Mean, ymin = CI_low, ymax = CI_high),
+      size = 0.5,
+      color = palette["green"]
+    ) +
+    scale_x_discrete(labels = \(x) replace_water_type(x)) +
+    labs(y = "Number of suitable solutions") +
+    theme_custom() +
+    theme(
+      axis.title.x = element_blank(),
+      axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
+    )
+    ggsave(file, plot, width = 6, height = 4)  
+}
