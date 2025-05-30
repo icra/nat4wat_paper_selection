@@ -18,7 +18,7 @@ replace_water_type <- function(water_type){
   case_match(
     water_type,
     "greywater" ~ "Greywater",
-    "pretreated_domestic_wastewater" ~ "Pretreated domestic wastewater",
+    "pretreated_domestic_wastewater" ~ "Primary treated wastewater",
     "secondary_treated_wastewater" ~ "Secondary treated wastewater",
     "raw_domestic_wastewater" ~ "Raw domestic wastewater"
   )
@@ -46,7 +46,7 @@ replace_criteria <- function(criteria){
     "wSocialBenefits" ~ "Social benefits",
     "wSpaceRequirements" ~ "Space requirements",
     "water_type_secondary_treated_wastewater" ~ "Secondary treated wastewater",
-    "water_type_pretreated_domestic_wastewater" ~ "Pretreated domestic wastewater",
+    "water_type_pretreated_domestic_wastewater" ~ "Primary treated wastewater",
     "water_type_raw_domestic_wastewater" ~ "Raw domestic wastewater",
     "climates_temperate" ~ "Temperate climate",
     "climates_tropical" ~ "Tropical climate",
@@ -161,15 +161,17 @@ plot_mcda_relevance <- function(selection_treatment, techs, file){
     pivot_longer(-id, names_to = "criteria") |>
     left_join(techs, by = "id") |> 
     mutate(criteria = replace_criteria(criteria)) |> 
+    mutate(criteria = str_trunc(criteria, 20)) |> 
     ggplot(aes(x = value, y = name)) +
     stat_summary(fun.data = mean_se, fun.args = list(mult = 3), color = palette["green"]) +
+    scale_y_discrete(labels = \(x) str_trunc(x, 40)) +
     facet_wrap(~ criteria, nrow = 2) +
     labs(
       x = "Average criteria's weight when each solution is selected",
       y = "Top 3 solutions for each wastewater type"
     ) +
     theme_custom()
-  ggsave(file, p, width = 9, height = 4)
+  ggsave(file, p, width = 8, height = 5)
 }
 
 plot_number_solutions <- function(selection_treatment, file){

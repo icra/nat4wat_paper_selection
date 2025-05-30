@@ -6,7 +6,12 @@ controller = crew::crew_controller_local(workers = 4, seconds_idle = 60)
 # Set target options:
 tar_option_set(
   # controller = controller,
-  packages = c("httr2", "tidytable", "stringr", "purrr", "ggplot2", "recipes", "ggbreak", "patchwork", "gt") # Packages that your targets need for their tasks.
+  packages = c(
+    "httr2", "tidytable", "stringr", 
+    "purrr", "ggplot2", "recipes", 
+    "ggbreak", "patchwork", "gt",
+    "modelsummary"
+  ) # Packages that your targets need for their tasks.
 )
 
 tar_source()
@@ -21,6 +26,7 @@ list(
   tar_target(inputs_treatment, generate_inputs(wastewater, n)),
   # tar_target(inputs_treatment, fix_household(inputs_treatment_raw)),
   tar_target(inputs_swm, generate_inputs(swm_water, n)),
+  tar_target(inputs_summary, summarize_inputs(inputs_treatment, "plots/summary_inputs.docx"), format = "file"),
   tar_target(selection_treatment, select_nbs_treatment(inputs_treatment)),
   tar_target(selection_treatment_plot, plot_selection_log2(selection_treatment, techs, "plots/selection_treatment_plot.png"), format = "file"),
   # tar_target(selection_swm, select_nbs_swm(inputs_swm)),
@@ -37,6 +43,7 @@ list(
     files_to_paper_folder, 
     move_files(
       selection_treatment_plot,
+      inputs_summary,
       loosers_treatment_table,
       rejection_reasons_plot,
       number_solutions_plot,

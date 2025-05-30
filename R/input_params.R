@@ -73,3 +73,12 @@ mcda_inputs <- list(
   wRemovalPerformance = 0:5
 )
 
+summarize_inputs <- function(inputs, file){
+    datasummary_balance(
+      ~ water_type,
+      inputs,
+      output = file,
+      dinm = FALSE
+    )
+  file
+}
