@@ -6,6 +6,7 @@ df <- selection_treatment |>
     filter(!is.na(id))
   
   glm_rec <- recipes::recipe(id ~ ., data = df) |> 
+    recipes::step_relevel(water_type, ref_level = "raw_domestic_wastewater") |> 
     recipes::step_dummy(all_nominal(), -all_outcomes()) |> 
     recipes::step_mutate_at(all_logical(), fn = \(x) as.integer(x))
   
@@ -21,7 +22,16 @@ df_glm <- df |>
   
 poisson_mod <- glm(n_solutions ~ ., df_glm, family = "poisson")
 
+poisson_mod <- model_number_solutions(selection_treatment)
+
 summary(poisson_mod)
+
+broom::tidy(poisson_mod) |> 
+  select(term, estimate) |> 
+  mutate(
+    increase = exp(estimate),
+    perc = (exp(estimate) - 1) * 100
+  )
 
 means <- estimate_means(poisson_mod, by = "water_type")
 

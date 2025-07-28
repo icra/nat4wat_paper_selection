@@ -16,7 +16,11 @@ mcda <- function(body){
 }
 
 select_nbs_treatment <- function(inputs_treatment){
-  map(seq_len(nrow(inputs_treatment)), \(i) select_nbs_treatment_one(inputs_treatment[i, ]), .progress = TRUE) |> 
+  map(
+    seq_len(nrow(inputs_treatment)), 
+    \(i) select_nbs_treatment_one(inputs_treatment[i, ]), 
+    .progress = TRUE
+  ) |> 
     list_rbind()
 }
 
@@ -46,8 +50,12 @@ create_body_treatment <- function(x){
 select_nbs_treatment_one <- function(x){
   body <- create_body_treatment(x)
 
-  find_nbs(body) |> 
-    apply_mcda(x)
+  resp <- find_nbs(body)
+  selected <- map_chr(resp, \(x) if("id" %in% names(x)) x$id else "No suitable solutions")
+  mcda_resp <- apply_mcda(resp, x)
+
+  mcda_resp |> 
+    mutate(selected = list(selected))
 }
 
 select_nbs_swm <- function(inputs_swm){

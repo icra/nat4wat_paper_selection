@@ -22,9 +22,11 @@ explore_one_no_solution <- function(x, i){
 
 model_number_solutions <- function(selection_treatment){
   df <- selection_treatment |> 
+    select(-any_of("selected")) |> 
     filter(!is.na(id))
   
   glm_rec <- recipes::recipe(id ~ ., data = df) |> 
+    recipes::step_relevel(water_type, ref_level = "raw_domestic_wastewater") |> 
     recipes::step_dummy(all_nominal(), -all_outcomes()) |> 
     recipes::step_mutate_at(all_logical(), fn = \(x) as.integer(x))
   

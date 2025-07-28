@@ -18,12 +18,14 @@ tar_source()
 n <- 1e4
 api_url <- "http://localhost:3001"
 
+
 set.seed(1121)
 
 list(
   tar_target(techs, get_techs(api_url)),
   tar_target(pca_techs_plot, plot_pca(techs, "plots/pca_techs_plot.png"), format = "file"),
-  tar_target(inputs_treatment, generate_inputs(wastewater, n)),
+  tar_target(inputs_treatment_raw, generate_inputs(wastewater, n)),
+  tar_target(inputs_treatment, correct_inconsistencies(inputs_treatment_raw)),
   # tar_target(inputs_treatment, fix_household(inputs_treatment_raw)),
   tar_target(inputs_swm, generate_inputs(swm_water, n)),
   tar_target(inputs_summary, summarize_inputs(inputs_treatment, "plots/summary_inputs.docx"), format = "file"),

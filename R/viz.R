@@ -48,6 +48,7 @@ replace_criteria <- function(criteria){
     "water_type_secondary_treated_wastewater" ~ "Secondary treated wastewater",
     "water_type_pretreated_domestic_wastewater" ~ "Primary treated wastewater",
     "water_type_raw_domestic_wastewater" ~ "Raw domestic wastewater",
+    "water_type_greywater" ~ "Greywater",
     "climates_temperate" ~ "Temperate climate",
     "climates_tropical" ~ "Tropical climate",
     "min_performances" ~ "Minimal performance",
@@ -97,16 +98,24 @@ plot_selection_log2 <- function(selection, techs, file){
     mutate(water_type = replace_water_type(water_type)) |> 
     left_join(techs |> select(id, name), by = "id") |> 
     mutate(name = str_trunc(name, 40)) |> 
-    ggplot(aes(x = n, y = name, fill = n_solutions)) +
-    geom_col() + #(fill = palette["blue2"]) +
+    ggplot(aes(x = n, y = name)) +
+    geom_col(aes(fill = n_solutions)) +
     scale_fill_distiller(
       name = "Suitable solutions", 
       palette = "Greens",
+      breaks = c(5, 10, 15),
+      labels = c(5, 10, 15),
+      limits = c(0, 15),
       direction = 1, 
       na.value = "grey80" #palette["brown"]
     ) +
     scale_x_continuous(transform = "log2") +
-    facet_wrap(vars(water_type), scales = "free") +
+    facet_wrap(
+      vars(water_type), scales = "free",
+      labeller = as_labeller(
+        \(x) paste("(", letters[1:4], ")", x)
+      )
+    ) +
     theme_custom() +
     theme(
       axis.text.y = element_text(hjust = 1, vjust = 0.5),
@@ -175,7 +184,9 @@ plot_mcda_relevance <- function(selection_treatment, techs, file){
 }
 
 plot_number_solutions <- function(selection_treatment, file){
-  mod <- model_number_solutions(selection_treatment)  
+  mod <- selection_treatment |> 
+    select(-selected) |> 
+    model_number_solutions()  
 
   p <- broom::tidy(mod) |> 
     filter(term != "(Intercept)") |> 
@@ -224,8 +235,8 @@ plot_scores <- function(scores, scores_by, techs, file, size = c(10, 6)){
   plot <- scores |>  
     mutate(water_type = replace_water_type(water_type)) |> 
     summarize(
-      score_chosen = sum(n_chosen_std), 
-      score_solutions = sum(n_solutions_std),
+      score_chosen = mean(n_chosen_std), 
+      score_solutions = mean(n_solutions_std),
       score = score_chosen + score_solutions,
       .by = all_of(scores_by)) |> 
     left_join(techs |> select(id, name), by = "id") |> 
@@ -259,13 +270,14 @@ move_files <- function(..., path = "C:/Users/jpueyo/ICRA/MULTISOURCE - General/P
   
   files <- c(...)
   for (f in files){
-    file.copy(f, path)
+    file.copy(f, path, overwrite = TRUE)
   }
   path
 }
 
 plot_means_water_type <- function(selection_treatment, file){
   df <- selection_treatment |> 
+    select(-selected) |> 
     filter(!is.na(id))
   
   glm_rec <- recipes::recipe(id ~ ., data = df) |> 

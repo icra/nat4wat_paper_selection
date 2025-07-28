@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.5.0",
+    "Version": "4.5.1",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -208,6 +208,17 @@
         "utils"
       ],
       "Hash": "1b2ca1972e3b00cd0bb5a98e16403028"
+    },
+    "S7": {
+      "Package": "S7",
+      "Version": "0.2.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "utils"
+      ],
+      "Hash": "5deb66b3ae702137e1f4162c11861e76"
     },
     "SQUAREM": {
       "Package": "SQUAREM",
@@ -951,22 +962,6 @@
       ],
       "Hash": "7eb1e342eee7e0a7449c49cdaa526d39"
     },
-    "furrr": {
-      "Package": "furrr",
-      "Version": "0.3.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "future",
-        "globals",
-        "lifecycle",
-        "purrr",
-        "rlang",
-        "vctrs"
-      ],
-      "Hash": "da7a4c32196cb2262a41dd5a25d486ff"
-    },
     "future": {
       "Package": "future",
       "Version": "1.49.0",
@@ -1054,28 +1049,30 @@
     },
     "ggplot2": {
       "Package": "ggplot2",
-      "Version": "3.5.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
+      "Version": "3.5.2.9002",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "tidyverse",
+      "RemoteRepo": "ggplot2",
+      "RemoteRef": "main",
+      "RemoteSha": "bed8e32d45c7dc98afb783b409edac98854d41a7",
       "Requirements": [
-        "MASS",
         "R",
+        "S7",
         "cli",
-        "glue",
         "grDevices",
         "grid",
         "gtable",
         "isoband",
         "lifecycle",
-        "mgcv",
         "rlang",
         "scales",
         "stats",
-        "tibble",
         "vctrs",
         "withr"
       ],
-      "Hash": "7ad64861e028a777d7d67ff83231b548"
+      "Hash": "de47542942db135788f6be00276e9ff1"
     },
     "ggplotify": {
       "Package": "ggplotify",
@@ -1544,7 +1541,7 @@
     },
     "lattice": {
       "Package": "lattice",
-      "Version": "0.22-6",
+      "Version": "0.22-7",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -1555,7 +1552,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "cc5ac1ba4c238c7ca9fa6a87ca11a7e2"
+      "Hash": "934f30aea6442867f57a610034ab06d3"
     },
     "lava": {
       "Package": "lava",
@@ -1718,7 +1715,7 @@
     },
     "mgcv": {
       "Package": "mgcv",
-      "Version": "1.9-1",
+      "Version": "1.9-3",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -1731,7 +1728,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "110ee9d83b496279960e162ac97764ce"
+      "Hash": "51fcbccd59569cdad6da6b8e49cdf4f2"
     },
     "microbenchmark": {
       "Package": "microbenchmark",
@@ -1775,6 +1772,24 @@
         "nanonext"
       ],
       "Hash": "469c3356c425d8908c3bd9cc32556d20"
+    },
+    "modelbased": {
+      "Package": "modelbased",
+      "Version": "0.11.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "bayestestR",
+        "datawizard",
+        "graphics",
+        "insight",
+        "parameters",
+        "stats",
+        "tools",
+        "utils"
+      ],
+      "Hash": "e3adb744f4612663f21a3483c85cc220"
     },
     "modeldata": {
       "Package": "modeldata",
@@ -2619,7 +2634,7 @@
     },
     "targets": {
       "Package": "targets",
-      "Version": "1.7.1",
+      "Version": "1.11.3",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -2632,6 +2647,7 @@
         "data.table",
         "igraph",
         "knitr",
+        "prettyunits",
         "ps",
         "rlang",
         "secretbase",
@@ -2643,7 +2659,7 @@
         "vctrs",
         "yaml"
       ],
-      "Hash": "d79b21ef513564351577d7064e1fc4dd"
+      "Hash": "19f79f73e18a4bd63c668080faae39d1"
     },
     "tibble": {
       "Package": "tibble",

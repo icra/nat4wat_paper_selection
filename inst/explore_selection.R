@@ -6,7 +6,8 @@ df <- tar_read(selection_treatment) |>
 
 df |> 
   tidytable::summarize(n_id = n(), .by = c(water_type, id)) |> 
-  tidytable::slice_max(order_by = n_id, n = 3, .by = water_type)
+  tidytable::slice_max(order_by = n_id, n = 3, .by = water_type) |> 
+  arrange(water_type)
 
 # Random forest ---------------------------------------------------------------
 
